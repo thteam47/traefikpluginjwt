@@ -1,7 +1,7 @@
 displayName: Demo Plugin JWT
 type: middleware
 
-import: github.com/traefik/plugindemo
+import: github.com/thteam47/traefikpluginjwt
 
 summary: '[Demo] Add Request Header JWT'
 
