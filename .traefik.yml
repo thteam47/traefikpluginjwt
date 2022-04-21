@@ -1,0 +1,9 @@
+displayName: Demo Plugin JWT
+type: middleware
+
+import: github.com/traefik/plugindemo
+
+summary: '[Demo] Add Request Header JWT'
+
+testData:
+  HashJWT: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRoYWlwdjlAdmlldHRlbGN5YmVyLmNvbSIsIm5hbWUiOiJQaGFtIFZhbiBUaGFpIiwicm9sZSI6InVzZXIifQ.tbh6XFFJIm7TNym0WNTMoLP3KBQdx1RpLOP-fgdopxQ"
