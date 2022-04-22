@@ -24,23 +24,19 @@ The source code of the plugin should be organized as follows:
             └── traefik
                 └── plugindemo
                     ├── demo.go
-                    ├── demo_test.go
                     ├── go.mod
                     ├── LICENSE
-                    ├── Makefile
                     └── readme.md
 ```
-
-```yaml
+Set module in config traefik command
+```
 # Static configuration
 
-experimental:
-  localPlugins:
-    example:
-      moduleName: github.com/traefik/plugindemo
+--providers.file.filename=/dynamic.yml
+--experimental.localPlugins.my-traefik-plugin-header.moduleName=github.com/thteam47/traefikpluginjwt
 ```
 
-(In the above example, the `plugindemo` plugin will be loaded from the path `./plugins-local/src/github.com/traefik/plugindemo`.)
+(In the above example, the `traefikpluginjwt` plugin will be loaded from the path `./plugins-local/src/github.com/thteam47/traefikpluginjwt`.)
 
 ```yaml
 # Dynamic configuration
@@ -49,8 +45,8 @@ http:
   middlewares:
     my-plugin:
       plugin:
-        example:
-          HashJWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRoYWlwdjlAdmlldHRlbGN5YmVyLmNvbSIsIm5hbWUiOiJQaGFtIFZhbiBUaGFpIiwicm9sZSI6ImFkbWluIn0.pLz29lwb7wUZL3NSvVF99v55nrP5RcO3c6yag0Py144
+        my-traefik-plugin-header:
+          authHeader: Authorization4
 
 ```
 
