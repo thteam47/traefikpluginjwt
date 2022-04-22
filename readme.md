@@ -34,18 +34,17 @@ Set module in config traefik command
 
 (In the above example, the `traefikpluginjwt` plugin will be loaded from the path `./plugins-local/src/github.com/thteam47/traefikpluginjwt`.)
 
-```yaml
-# Dynamic configuration
-
-http:
-  middlewares:
-    my-plugin:
-      plugin:
-        my-traefik-plugin-header:
-          authHeader: Authorization4
+Config key in labels.
 
 ```
+- "traefik.http.middlewares.my-container123.plugin.my-traefik-plugin-header.secret=thteam"
+```
 
+Call middlewares
+
+```
+- "traefik.http.routers.whoami.middlewares=my-container123@docker"
+```
 ## Defining a Plugin
 
 A plugin package must define the following exported Go objects:

@@ -1,0 +1,51 @@
+version: "3"
+services:
+  helloworld:
+    image: tutum/hello-world
+    ports:
+      - "82:80"
+    networks:
+      - traefik-public
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.helloworld.rule=Host(`test.localhost`)
+        - traefik.http.routers.helloworld.entryPoints=web
+        - traefik.http.routers.helloworld.service=hello-service
+        - traefik.http.services.hello-service.loadbalancer.server.port=80
+        - traefik.docker.network=traefik-public
+  whoami:
+    image: jwilder/whoami
+    ports:
+      - "8000:8000"
+    networks:
+      - traefik-public
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.whoami.rule=Host(`test.localhost`) && Path(`/whoami`)
+        - traefik.http.routers.whoami.entryPoints=web
+        - traefik.http.routers.whoami.service=whoami-service
+        - traefik.http.services.whoami-service.loadbalancer.server.port=8000
+        - traefik.docker.network=traefik-public
+        - "traefik.http.routers.whoami.middlewares=my-container123@docker"
+  whoami2:
+    image: containous/whoami
+    ports:
+      - "81:80"
+    networks:
+      - traefik-public
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.whoami2.rule=Host(`test.localhost`) && Path(`/whoami2`)
+        - traefik.http.routers.whoami2.entryPoints=web
+        - traefik.http.routers.whoami2.service=whoami2-service
+        - traefik.http.services.whoami2-service.loadbalancer.server.port=80
+        - traefik.docker.network=traefik-public
+        - "traefik.http.routers.whoami2.middlewares=my-container123@docker"
+        #- "traefik.http.middlewares.whoami2-demo.plugin.my-traefik-plugin-header.headers.DoesPluginWork=YES"
+      replicas: 3
+networks:
+  traefik-public:
+    external: true

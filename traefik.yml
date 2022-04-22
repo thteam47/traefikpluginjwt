@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  reverse-proxy:
+    # The official v2.0 Traefik docker image
+    image: traefik:v2.6
+    # Enables the web UI and tells Traefik to listen to docker
+    command:
+      - "--api=true"
+      - "--api.dashboard=true"
+      - "--providers.docker"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.watch=true"
+      - "--providers.docker.exposedByDefault=false"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.network=traefik-public"
+      - "--entryPoints.web.address=:80"
+      - "--experimental.localPlugins.my-traefik-plugin-header.moduleName=github.com/traefik/plugindemo"
+
+    deploy:
+
+        placement:
+          constraints:
+            - node.role == manager
+        labels:
+          - "traefik.enable=true"
+          - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+          - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+          - "traefik.http.routers.traefik.service=api@internal"
+          - "traefik.http.routers.traefik.entrypoints=web"
+          - "traefik.http.middlewares.my-container123.plugin.my-traefik-plugin-header.secret=thteam"
+
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    networks:
+      - traefik-public
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "./plugins-local:/plugins-local"
+
+
+networks:
+    traefik-public:
+       external: true
