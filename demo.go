@@ -41,13 +41,13 @@ func (a *Demo) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	
 	headerToken := req.Header.Get("Authorization")
 	if len(headerToken) == 0 {
-		http.Error(rw, "Request error 1", http.StatusUnauthorized)
+		http.Error(rw, "Request error", http.StatusUnauthorized)
 		return
 	}
 	
 	token, preprocessError  := preprocessJWT(headerToken, "Bearer")
 	if preprocessError != nil {
-		http.Error(rw, "Request error 2", http.StatusBadRequest)
+		http.Error(rw, "Request error", http.StatusBadRequest)
 		return
 	}
 	
@@ -66,7 +66,7 @@ func (a *Demo) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		req.Header.Del("Authorization")
 		a.next.ServeHTTP(rw, req)
 	} else {
-		http.Error(rw, "Sercet incorrect", http.StatusUnauthorized)
+		http.Error(rw, "Request error", http.StatusUnauthorized)
 	}
 }
 type Token struct {
