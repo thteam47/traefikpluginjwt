@@ -1,83 +1,271 @@
-// Package pluginJWT a JWT plugin.
-package pluginJWT
+// Package plugindemo a demo plugin.
+
+package plugindemo
+
+
 
 import (
+
+	"strings"
+
+	"bytes"
+
 	"context"
+
+	"fmt"
+
 	"net/http"
+
+	"text/template"
+
+	"encoding/base64"
+
+	"crypto/hmac"
+
+	"crypto/sha256"
+
 )
 
+
+
 // Config the plugin configuration.
+
 type Config struct {
-	Secret string `json:"secret,omitempty"`
-	Authorization string `json:"authorization,omitempty"`
+
+	AuthHeader string `json:"authHeader,omitempty"`
+
 }
+
+
 
 // CreateConfig creates the default plugin configuration.
+
 func CreateConfig() *Config {
+
 	return &Config{}
+
 }
 
-// JWT a JWT plugin.
-type JWT struct {
+
+
+// Demo a Demo plugin.
+
+type Demo struct {
+
 	next     http.Handler
+
+	authHeader  string
+
 	name     string
-	secret	 string
-	authorization  string
+
+	template *template.Template
+
 }
 
-// New created a new JWT plugin.
+
+
+// New created a new Demo plugin.
+
 func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
-	if len(config.Secret) == 0 {
-		config.Secret = "SECRET"
-	}
-	if len(config.Authorization) == 0 {
-		config.Authorization = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRoYWlwdjlAdmlldHRlbGN5YmVyLmNvbSIsIm5hbWUiOiJQaGFtIFZhbiBUaGFpIiwicm9sZSI6InVzZXIifQ.tbh6XFFJIm7TNym0WNTMoLP3KBQdx1RpLOP-fgdopxQ"
+
+	if len(config.AuthHeader) == 0 {
+
+		config.AuthHeader = "Authorization"
+
 	}
 
-	return &JWT{
+
+
+	return &Demo{
+
+		authHeader:  config.AuthHeader,
+
 		next:     next,
+
 		name:     name,
-		secret: config.Secret,
-		authorization: config.Authorization,
+
+		template: template.New("demo").Delims("[[", "]]"),
+
 	}, nil
+
 }
 
-func (j *JWT) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-		req.Header.Add("X-Auth-User", j.authorization)
-		j.next.ServeHTTP(res, req)
-	// headerToken := req.Header.Get(j.authorization)
 
-	// if len(headerToken) == 0 {
-	// 	http.Error(res, "Request error", http.StatusUnauthorized)
-	// 	return
-	// }
+
+func (a *Demo) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+
 	
-	// token, preprocessError  := preprocessJWT(headerToken, "Bearer")
-	// if preprocessError != nil {
-	// 	http.Error(res, "Request error", http.StatusBadRequest)
-	// 	return
-	// }
+
+	headerToken := req.Header.Get(a.authHeader)
+
+
+
+	if len(headerToken) == 0 {
+
+		http.Error(rw, "Request error 1", http.StatusUnauthorized)
+
+		return
+
+	}
+
 	
-	// verified, verificationError := verifyJWT(token, j.secret)
-	// if verificationError != nil {
-	// 	http.Error(res, "Not allowed", http.StatusUnauthorized)
-	// 	return
-	// }
 
-	// if (verified) {
-	// 	// If true decode payload
-	// 	payload, decodeErr := decodeBase64(token.payload)
-	// 	if decodeErr != nil {
-	// 		http.Error(res, "Request error", http.StatusBadRequest)
-	// 		return
-	// 	}
+	token, preprocessError  := preprocessJWT(headerToken, "Bearer")
 
-	// 	// TODO Check for outside of ASCII range characters
-		
-	// 	// Inject header as proxypayload or configured name
-	// 	req.Header.Add("X-Auth-User", payload)
-	// 	j.next.ServeHTTP(res, req)
-	// } else {
-	// 	http.Error(res, "Not allowed", http.StatusUnauthorized)
-	// }
+	if preprocessError != nil {
+
+		http.Error(rw, "Request error 2", http.StatusBadRequest)
+
+		return
+
+	}
+
+	
+
+	_, verificationError := verifyJWT(token, "thteam")
+
+	if verificationError != nil {
+
+		http.Error(rw, "Not allowed", http.StatusUnauthorized)
+
+		return
+
+	}
+
+
+
+
+
+		payload, decodeErr := decodeBase64(token.payload)
+
+		if decodeErr != nil {
+
+			http.Error(rw, "Request error", http.StatusBadRequest)
+
+			return
+
+		}
+
+
+
+		req.Header.Add("X-Auth-User", payload)
+
+		req.Header.Del("Authorization")
+
+		a.next.ServeHTTP(rw, req)
+
+	
+
+}
+
+type Token struct {
+
+	header string
+
+	payload string
+
+	verification string
+
+}
+
+
+
+// verifyJWT Verifies jwt token with secret
+
+func verifyJWT(token Token, secret string) (bool, error) {
+
+	mac := hmac.New(sha256.New, []byte(secret))
+
+	message := token.header + "." + token.payload
+
+	mac.Write([]byte(message))
+
+	expectedMAC := mac.Sum(nil)
+
+	
+
+	decodedVerification, errDecode := base64.RawURLEncoding.DecodeString(token.verification)
+
+	if errDecode != nil {
+
+		return false, errDecode
+
+	}
+
+
+
+	if hmac.Equal(decodedVerification, expectedMAC) {
+
+		return true, nil
+
+	}
+
+	return false, nil
+
+	// TODO Add time check to jwt verification
+
+}
+
+
+
+// preprocessJWT Takes the request header string, strips prefix and whitespaces and returns a Token
+
+func preprocessJWT(reqHeader string, prefix string) (Token, error) {
+
+	// fmt.Println("==> [processHeader] SplitAfter")
+
+	// structuredHeader := strings.SplitAfter(reqHeader, "Bearer ")[1]
+
+	cleanedString := strings.TrimPrefix(reqHeader, prefix)
+
+	cleanedString = strings.TrimSpace(cleanedString)
+
+	// fmt.Println("<== [processHeader] SplitAfter", cleanedString)
+
+
+
+	var token Token
+
+
+
+	tokenSplit := strings.Split(cleanedString, ".")
+
+
+
+	if len(tokenSplit) != 3 {
+
+		return token, fmt.Errorf("Invalid token")
+
+	}
+
+
+
+	token.header = tokenSplit[0]
+
+	token.payload = tokenSplit[1]
+
+	token.verification = tokenSplit[2]
+
+
+
+	return token, nil
+
+}
+
+
+
+// decodeBase64 Decode base64 to string
+
+func decodeBase64(baseString string) (string, error) {
+
+	byte, decodeErr := base64.RawURLEncoding.DecodeString(baseString)
+
+	if decodeErr != nil {
+
+		return baseString, fmt.Errorf("Error decoding")
+
+	}
+
+	return string(byte), nil
+
 }
