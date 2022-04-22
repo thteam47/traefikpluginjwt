@@ -4,8 +4,6 @@
 
 A [Traefik](https://traefik.io) middleware plugin is just a [Go package](https://golang.org/ref/spec#Packages) that provides an `http.Handler` to perform specific processing of requests and responses.
 
-Rather than being pre-compiled and linked, however, plugins are executed on the fly by [Yaegi](https://github.com/traefik/yaegi), an embedded Go interpreter.
-
 ## Usage
 
 ### Local Mode
@@ -21,8 +19,8 @@ The source code of the plugin should be organized as follows:
 ./plugins-local/
     └── src
         └── github.com
-            └── traefik
-                └── plugindemo
+            └── thteam47
+                └── traefikpluginjwt
                     ├── demo.go
                     ├── go.mod
                     ├── LICENSE
@@ -30,8 +28,6 @@ The source code of the plugin should be organized as follows:
 ```
 Set module in config traefik command
 ```
-# Static configuration
-
 --providers.file.filename=/dynamic.yml
 --experimental.localPlugins.my-traefik-plugin-header.moduleName=github.com/thteam47/traefikpluginjwt
 ```
